@@ -12,7 +12,7 @@
     "setup": "npm install && npm --prefix server install && npm --prefix server run seed",
     "seed": "npm --prefix server run seed",
     "test": "npm --prefix server test",
-    "render:build": "npm install && npm --prefix server install && npm run build",
+      "render:build": "npm install --include=dev && npm --prefix server install --omit=dev && npm run build",
     "render:start": "npm --prefix server start"
   },
   "dependencies": {

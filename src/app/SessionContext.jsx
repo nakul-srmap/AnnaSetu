@@ -184,7 +184,12 @@ export function SessionProvider({ children }) {
         return res.receipt
       }),
 
-    raiseIndent: (body) => act(async () => setData(await api.raiseIndent(body))),
+    raiseIndent: (body) =>
+      act(async () => {
+        const next = await api.raiseIndent(body)
+        setData(next)
+        return next
+      }),
     assignDelivery: (id, partner) => act(async () => setData(await api.assignDelivery(id, partner))),
     fileGrievance: (body) => act(async () => setData(await api.fileGrievance(body))),
     requestDelivery: (body) => act(async () => setData(await api.requestDelivery(body))),

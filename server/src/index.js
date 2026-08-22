@@ -20,6 +20,10 @@ try {
   process.exit(1)
 }
 
+// An empty database on a hosted deployment usually means nobody could run the
+// seed by hand — free instances have no shell. Rather than start and reject
+// every sign-in, the registers are initialised on first boot. It only runs
+// when there are no accounts at all, so a redeploy never wipes live data.
 if (db.users().length === 0) {
   if (config.seedOnEmpty) {
     console.log('No accounts found — seeding the registers…')

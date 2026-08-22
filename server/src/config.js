@@ -10,6 +10,9 @@ export const config = {
   // Set this and the API runs on Postgres. Unset, it uses the JSON file below,
   // which is what the test suite runs on.
   databaseUrl: process.env.DATABASE_URL ?? null,
+  // Seed automatically when the database is completely empty. On by default so
+  // a hosted deployment works without shell access; set SEED_ON_EMPTY=0 to
+  // require the seed to be run deliberately.
   seedOnEmpty: process.env.SEED_ON_EMPTY !== '0',
   dbPath: process.env.DB_PATH ?? path.join(here, '..', 'data', 'db.json'),
   origin: process.env.CORS_ORIGIN ?? true,

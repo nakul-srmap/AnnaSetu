@@ -18,6 +18,7 @@ export default function Inventory() {
   // whatever is shortest, so the common case is one click.
   const [commodity, setCommodity] = useState(null)
   const [quantity, setQuantity] = useState('')
+  const [sent, setSent] = useState(null)
 
   const lines = data?.stockLines ?? []
   const chosen = lines.find((l) => l.commodity === commodity) ?? lines.find((l) => l.low) ?? lines[0]
@@ -52,11 +53,13 @@ export default function Inventory() {
     setQuantity(String(lines.find((l) => l.commodity === c)?.suggested ?? 50))
   }
 
-  const submit = () => {
-    if (!chosen) return
-    const amount = Number(quantity)
-    if (!Number.isFinite(amount) || amount <= 0) return
-    raiseIndent({ commodity: chosen.commodity, quantity: amount })
+  const amount = Number(quantity) > 0 ? Number(quantity) : (chosen?.suggested ?? 0)
+
+  const submit = async () => {
+    if (!chosen || amount <= 0) return
+    setSent(null)
+    const result = await raiseIndent({ commodity: chosen.commodity, quantity: amount })
+    if (result) setSent({ commodity: chosen.commodity, quantity: amount })
   }
 
   return (
@@ -151,16 +154,20 @@ export default function Inventory() {
                 {pendingFor(chosen.commodity) ? (
                   <p className="text-sm text-ink-soft">
                     An indent for {chosen.commodity} is already awaiting the district's decision.
+                    Pick another commodity, or wait for the district to answer this one.
                   </p>
                 ) : (
-                  <Button
-                    accent="navy"
-                    full
-                    disabled={busy || !Number(quantity)}
-                    onClick={submit}
-                  >
-                    Send indent for {Number(quantity) || chosen.suggested} kg
+                  <Button accent="navy" full disabled={busy || amount <= 0} onClick={submit}>
+                    {busy ? 'Sending…' : `Send indent for ${amount} kg`}
                   </Button>
+                )}
+
+                {/* Without this the button simply disappears on success, which
+                    reads as nothing having happened. */}
+                {sent && !error && (
+                  <p className="mt-2 text-sm text-brand-seal">
+                    Indent sent for {sent.quantity} kg of {sent.commodity}. The district sees it now.
+                  </p>
                 )}
                 {error && <p className="mt-2 text-xs text-brand-stamp">{error}</p>}
                 <Note>

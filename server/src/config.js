@@ -10,6 +10,7 @@ export const config = {
   // Set this and the API runs on Postgres. Unset, it uses the JSON file below,
   // which is what the test suite runs on.
   databaseUrl: process.env.DATABASE_URL ?? null,
+  seedOnEmpty: process.env.SEED_ON_EMPTY !== '0',
   dbPath: process.env.DB_PATH ?? path.join(here, '..', 'data', 'db.json'),
   origin: process.env.CORS_ORIGIN ?? true,
   // Slot capacity is a policy knob, not a constant buried in code.

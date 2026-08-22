@@ -21,7 +21,20 @@ try {
 }
 
 if (db.users().length === 0) {
-  console.warn('No users found. Run `npm run seed` to initialise the registers.')
+  if (config.seedOnEmpty) {
+    console.log('No accounts found — seeding the registers…')
+    try {
+      const { buildSeed } = await import('./seed/data.js')
+      const { flush } = await import('./db.js')
+      db.replace(buildSeed())
+      await flush()
+      console.log(`Seeded ${db.users().length} accounts across ${db.shops().length} shops.`)
+    } catch (err) {
+      console.error(`Automatic seed failed: ${err.message}`)
+    }
+  } else {
+    console.warn('No users found. Run `npm run seed` to initialise the registers.')
+  }
 }
 
 createApp().listen(config.port, () => {

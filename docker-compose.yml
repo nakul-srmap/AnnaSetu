@@ -1,0 +1,35 @@
+# The database only. The API and the portal run on your machine as usual, so
+# code changes still reload instantly.
+#
+#   docker compose up -d      start Postgres in the background
+#   docker compose down       stop it, keeping the data
+#   docker compose down -v    stop it and delete the data
+#
+# The matching connection string is:
+#   postgres://annasetu:annasetu@localhost:5432/annasetu
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: annasetu-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: annasetu
+      POSTGRES_PASSWORD: annasetu
+      POSTGRES_DB: annasetu
+    ports:
+      # Host 5432. If you already run Postgres locally, change the left-hand
+      # number here and in DATABASE_URL, e.g. "5433:5432".
+      - '5432:5432'
+    volumes:
+      - annasetu-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # `npm run seed` fails confusingly if it runs before Postgres is ready,
+      # so the container reports healthy only once it can accept queries.
+      test: ['CMD-SHELL', 'pg_isready -U annasetu -d annasetu']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  annasetu-pgdata:

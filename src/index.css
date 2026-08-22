@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-paper text-ink font-body antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid theme('colors.brand.stamp');
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Repeated shells only — everything else stays inline Tailwind. */
+  .panel {
+    @apply border border-ink-rule bg-white p-5;
+  }
+  .eyebrow {
+    @apply font-mono text-[9.5px] uppercase tracking-[0.12em] text-ink-soft;
+  }
+  .ruled-paper {
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent 0 22px,
+      rgba(22, 33, 28, 0.045) 22px 23px
+    );
+  }
+  .gridded {
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent 0 38px,
+      rgba(22, 33, 28, 0.03) 38px 39px
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

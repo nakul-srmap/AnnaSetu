@@ -1,0 +1,26 @@
+{
+  "name": "annasetu-api",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env --watch src/index.js",
+    "start": "node --env-file-if-exists=.env src/index.js",
+    "seed": "node --env-file-if-exists=.env src/seed/run.js",
+    "db:check": "node --env-file-if-exists=.env bin/db-check.js",
+    "db:reset": "node --env-file-if-exists=.env src/seed/run.js",
+    "test": "node --test test/*.test.js",
+    "test:pg": "node --env-file-if-exists=.env --test test/*.test.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "pg": "^8.23.0"
+  },
+  "engines": {
+    "node": ">=20.12"
+  }
+}

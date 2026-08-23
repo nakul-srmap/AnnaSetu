@@ -37,17 +37,18 @@ export default function Overview() {
           it. Shown before anything else, because it changes what they should
           do today. */}
       {data.emergency?.guidance && (
-        <Alert tone={data.emergency.phase === 'lockdown' ? 'stamp' : 'navy'} className="mb-5">
-          <p className="font-semibold">{data.emergency.guidance.headline}</p>
-          <p className="mt-1 text-xs uppercase tracking-wide text-ink-soft">
-            {data.emergency.reason} · day {data.emergency.day} of {data.emergency.day + data.emergency.daysRemaining - 1}
+        <div className="mb-5 border border-ink-rule border-l-[3px] border-l-brand-stamp bg-white px-4 py-3">
+          <h4 className="text-sm font-semibold">{data.emergency.guidance.headline}</h4>
+          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.06em] text-brand-stamp">
+            {data.emergency.reason} · day {data.emergency.day} of{' '}
+            {data.emergency.day + data.emergency.daysRemaining - 1}
           </p>
-          <ul className="mt-2 list-disc space-y-1 pl-4 text-sm">
+          <ul className="mt-2 list-disc space-y-1 pl-4 text-[13px] text-ink-soft">
             {data.emergency.guidance.points.map((point) => (
               <li key={point}>{point}</li>
             ))}
           </ul>
-        </Alert>
+        </div>
       )}
 
 

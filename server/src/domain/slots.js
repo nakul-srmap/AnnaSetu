@@ -1,4 +1,5 @@
 import { config } from '../config.js'
+import { emergencyForShop } from './emergency.js'
 import { db } from '../db.js'
 import { isVerified } from './assistance.js'
 import { today } from './cycle.js'
@@ -19,13 +20,17 @@ export const bookingsFor = (shopCode, date = today()) =>
 
 export function slotAvailability(shopCode, date = today()) {
   const taken = bookingsFor(shopCode, date)
+  // Under a declared restriction a shop takes fewer households per slot, so
+  // the few who must attend are never in a crowd.
+  const emergency = emergencyForShop(shopCode, date)
+  const capacity = emergency?.slotCapacity ?? config.slotCapacity
   return SLOT_TIMES.map((time) => {
     const booked = taken.filter((b) => b.slot === time).length
     return {
       time,
-      capacity: config.slotCapacity,
+      capacity,
       booked,
-      left: Math.max(0, config.slotCapacity - booked),
+      left: Math.max(0, capacity - booked),
     }
   })
 }

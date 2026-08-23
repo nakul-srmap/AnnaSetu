@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { db } from '../db.js'
 import { requireRole, requireAssistance } from '../auth/middleware.js'
+import { emergencyForShop, guidance } from '../domain/emergency.js'
 import { currentCycle, today } from '../domain/cycle.js'
 import { collectionFor, entitlementFor, entitlementRows } from '../domain/entitlement.js'
 import { openBookingForCard, qrPayload, slotAvailability } from '../domain/slots.js'
@@ -41,6 +42,11 @@ function view(card) {
       ? { code: shop.code, name: shop.name, timings: shop.timings, weeklyClosing: shop.weeklyClosing }
       : null,
     cycle: currentCycle(),
+    // What is in force where this household collects, and what to do about it.
+    emergency: (() => {
+      const active = emergencyForShop(card.shop)
+      return active ? { ...active, guidance: guidance(active.phase) } : null
+    })(),
     entitlement: entitlementRows(card),
     entitled: entitlementFor(card),
     collected: Boolean(collection),

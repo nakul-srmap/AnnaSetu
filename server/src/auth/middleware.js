@@ -1,5 +1,6 @@
 import { readSession } from './tokens.js'
 import { db } from '../db.js'
+import { emergencyForShop } from '../domain/emergency.js'
 import { assistanceState, isVerified } from '../domain/assistance.js'
 
 export function authenticate(req, _res, next) {
@@ -27,6 +28,16 @@ export const requireRole = (...roles) => (req, res, next) => {
 // Enforced here so hiding the menu item is presentation, not the control.
 export function requireAssistance(req, res, next) {
   const card = db.cards().find((c) => c.number === req.user?.cardNumber)
+
+  // While a district is under lockdown, home delivery is open to every
+  // household. Requiring a household to prove frailty during a gathering ban
+  // would send exactly the people who should stay home out to prove it.
+  const emergency = emergencyForShop(card?.shop)
+  if (emergency?.deliveryOpenToAll) {
+    req.card = card
+    return next()
+  }
+
   if (!isVerified(card)) {
     const state = assistanceState(card)
     const messages = {

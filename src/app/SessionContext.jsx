@@ -31,11 +31,11 @@ export function SessionProvider({ children }) {
       else if (role === 'dealer') setData(await api.dealer())
       else if (role === 'helpline') setData(await api.deskRecent())
       else if (role === 'officer') {
-        const [monitoring, masters, gaps, grievances, assistance, indents] = await Promise.all([
+        const [monitoring, masters, gaps, grievances, assistance, indents, emergency] = await Promise.all([
           api.monitoring(), api.masters(), api.gaps(), api.grievances(), api.assistanceQueue(),
-          api.indents(),
+          api.indents(), api.emergency(),
         ])
-        setOfficer({ monitoring, masters, gaps, grievances, assistance, indents })
+        setOfficer({ monitoring, masters, gaps, grievances, assistance, indents, emergency })
       }
       setLastSync(new Date())
       if (!quiet) setError(null)
@@ -198,6 +198,20 @@ export function SessionProvider({ children }) {
       act(async () => {
         await api.decideAssistance(cardNumber, body)
         await load('officer', { quiet: true })
+      }),
+
+    declareEmergency: (body) =>
+      act(async () => {
+        const r = await api.declareEmergency(body)
+        await load('officer', { quiet: true })
+        return r
+      }),
+
+    liftEmergency: (district) =>
+      act(async () => {
+        const r = await api.liftEmergency(district)
+        await load('officer', { quiet: true })
+        return r
       }),
 
     decideIndent: (id, body) =>

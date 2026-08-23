@@ -103,6 +103,10 @@ export const api = {
   setGrievanceStage: (id, body) =>
     request(`/officer/grievances/${encodeURIComponent(id)}/stage`, { method: 'POST', body }),
   indents: () => request('/officer/indents'),
+  emergency: () => request('/officer/emergency'),
+  declareEmergency: (body) => request('/officer/emergency', { method: 'POST', body }),
+  liftEmergency: (district) =>
+    request(`/officer/emergency/${encodeURIComponent(district)}`, { method: 'DELETE' }),
   decideIndent: (id, body) =>
     request(`/officer/indents/${encodeURIComponent(id)}/decision`, { method: 'POST', body }),
   assistanceQueue: () => request('/officer/assistance'),

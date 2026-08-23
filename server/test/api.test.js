@@ -1118,3 +1118,73 @@ describe('tagged consignments from the godown', () => {
     assert.equal(manifest.receivedKg, manifest.expectedKg)
   })
 })
+
+describe('emergency operations', () => {
+  const asHousehold = () =>
+    call('/auth/card/sign-in', { method: 'POST', body: { identifier: '03PB-0221-1140', pin: cardPin('03PB-0221-1140') } })
+
+  test('normally, delivery needs verified assistance and slots are full size', async () => {
+    reseed()
+    const h = (await asHousehold()).body.token
+    assert.equal((await call('/beneficiary/deliveries', { method: 'POST', token: h, body: {} })).status, 403)
+    const slots = await call('/beneficiary/shops/FPS%201101/slots', { token: h })
+    assert.equal(slots.body.slots[0].capacity, 8)
+  })
+
+  test('declaring a restriction opens delivery to every household and cuts capacity', async () => {
+    const officer = (await login('JC-LUD-004', 'ludhiana@2026')).token
+    assert.equal((await call('/officer/emergency', { method: 'POST', token: officer, body: { reason: 'Pandemic' } })).status, 201)
+
+    const h = (await asHousehold()).body.token
+    const me = await call('/beneficiary', { token: h })
+    assert.equal(me.body.emergency.phase, 'lockdown')
+    assert.equal(me.body.emergency.deliveryOpenToAll, true)
+    assert.ok(me.body.emergency.guidance.points.length > 0)
+
+    // The household that was refused a moment ago can now request delivery.
+    assert.equal((await call('/beneficiary/deliveries', { method: 'POST', token: h, body: {} })).status, 201)
+    const slots = await call('/beneficiary/shops/FPS%201101/slots', { token: h })
+    assert.equal(slots.body.slots[0].capacity, 3)
+  })
+
+  test('it cannot be declared twice, or for another district', async () => {
+    const officer = (await login('JC-LUD-004', 'ludhiana@2026')).token
+    assert.equal((await call('/officer/emergency', { method: 'POST', token: officer, body: {} })).status, 409)
+    assert.equal((await call('/officer/emergency', { method: 'POST', token: officer, body: { district: 'Mumbai' } })).status, 403)
+  })
+
+  test('the phase moves from lockdown to easing on its own, and expires at ninety days', async () => {
+    const { emergencyFor } = await import('../src/domain/emergency.js')
+    db.write((state) => {
+      state.emergencies = [{ id: 'EM-t', district: 'Ludhiana', reason: 'Pandemic', declaredBy: 'JC', declaredOn: '2026-01-01', liftedOn: null }]
+    })
+    assert.equal(emergencyFor('Ludhiana', '2026-01-01').phase, 'lockdown')
+    assert.equal(emergencyFor('Ludhiana', '2026-01-30').phase, 'lockdown')
+    // Day 31 onward, restrictions ease: delivery narrows back to those who need it.
+    const easing = emergencyFor('Ludhiana', '2026-01-31')
+    assert.equal(easing.phase, 'easing')
+    assert.equal(easing.deliveryOpenToAll, false)
+    assert.equal(easing.slotCapacity, 5)
+    // It lifts itself rather than needing anyone to remember.
+    assert.equal(emergencyFor('Ludhiana', '2026-04-02'), null)
+  })
+
+  test('guidance differs between the two phases', async () => {
+    const { guidance } = await import('../src/domain/emergency.js')
+    assert.match(guidance('lockdown').headline, /stay home/i)
+    assert.match(guidance('easing').headline, /safely/i)
+    assert.notEqual(guidance('lockdown').points[0], guidance('easing').points[0])
+    assert.equal(guidance('normal'), null)
+  })
+
+  test('lifting it restores normal operations', async () => {
+    reseed()
+    const officer = (await login('JC-LUD-004', 'ludhiana@2026')).token
+    await call('/officer/emergency', { method: 'POST', token: officer, body: { reason: 'Pandemic' } })
+    assert.equal((await call('/officer/emergency/Ludhiana', { method: 'DELETE', token: officer })).status, 200)
+
+    const h = (await asHousehold()).body.token
+    assert.equal((await call('/beneficiary', { token: h })).body.emergency, null)
+    assert.equal((await call('/beneficiary/deliveries', { method: 'POST', token: h, body: {} })).status, 403)
+  })
+})

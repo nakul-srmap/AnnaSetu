@@ -89,6 +89,13 @@ export const SPEC = {
       status: T, dispatchedAt: T, receivedAt: T,
     },
   },
+  emergencies: {
+    table: 'emergencies',
+    key: 'id',
+    columns: {
+      id: T, district: T, reason: T, declaredBy: T, declaredOn: T, liftedOn: T,
+    },
+  },
   scanExceptions: {
     table: 'scan_exceptions',
     // No natural key on the record, so one is derived. A manual entry is

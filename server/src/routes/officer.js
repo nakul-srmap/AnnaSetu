@@ -9,6 +9,7 @@ import { isVerified } from '../domain/assistance.js'
 import { assistanceState, decideAssistance, pendingApplications } from '../domain/assistance.js'
 import { REORDER } from '../domain/stock.js'
 import { dispatchConsignment } from '../domain/consignment.js'
+import { declareEmergency, emergencyFor, guidance, liftEmergency } from '../domain/emergency.js'
 
 const router = Router()
 router.use(requireRole('officer'))
@@ -193,6 +194,42 @@ router.post('/assistance/:cardNumber/decision', (req, res) => {
 
 // A shop raising an indent is asking the district for stock. It was being
 // written by the dealer and read by nobody, so the request died at the shop.
+// Declaring a public health restriction across the district.
+router.get('/emergency', (req, res) => {
+  const { district } = scope(req)
+  const active = emergencyFor(district)
+  res.json({
+    district,
+    emergency: active,
+    guidance: active ? guidance(active.phase) : null,
+  })
+})
+
+router.post('/emergency', (req, res) => {
+  const { district: own } = scope(req)
+  const district = req.body?.district ?? own
+  const reason = req.body?.reason
+  if (own && district !== own) {
+    return res.status(403).json({ error: 'That district is not in your charge.' })
+  }
+  if (emergencyFor(district)) {
+    return res.status(409).json({ error: `${district} is already under a declared restriction.` })
+  }
+  const row = db.write((state) => declareEmergency(state, { district, reason, declaredBy: req.user.name }))
+  res.status(201).json({ emergency: emergencyFor(row.district) })
+})
+
+router.delete('/emergency/:district', (req, res) => {
+  const { district: own } = scope(req)
+  const district = req.params.district
+  if (own && district !== own) {
+    return res.status(403).json({ error: 'That district is not in your charge.' })
+  }
+  const row = db.write((state) => liftEmergency(state, district))
+  if (!row) return res.status(404).json({ error: `${district} is not under a declared restriction.` })
+  res.json({ ok: true, liftedOn: row.liftedOn })
+})
+
 router.get('/indents', (req, res) => {
   const { codes, shops } = scope(req)
   const rows = db

@@ -33,6 +33,24 @@ export default function Overview() {
         }
       />
 
+      {/* What is in force where this household collects, and what to do about
+          it. Shown before anything else, because it changes what they should
+          do today. */}
+      {data.emergency?.guidance && (
+        <Alert tone={data.emergency.phase === 'lockdown' ? 'stamp' : 'navy'} className="mb-5">
+          <p className="font-semibold">{data.emergency.guidance.headline}</p>
+          <p className="mt-1 text-xs uppercase tracking-wide text-ink-soft">
+            {data.emergency.reason} · day {data.emergency.day} of {data.emergency.day + data.emergency.daysRemaining - 1}
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-4 text-sm">
+            {data.emergency.guidance.points.map((point) => (
+              <li key={point}>{point}</li>
+            ))}
+          </ul>
+        </Alert>
+      )}
+
+
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="grid content-start gap-5">
           <Panel title="This cycle" eyebrow="Entitlement">

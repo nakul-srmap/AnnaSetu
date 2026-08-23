@@ -29,6 +29,7 @@ export const emptyState = () => ({
   deliveries: [],
   indents: [],
   consignments: [],
+  emergencies: [],
   scanExceptions: [],
   otps: [],
 })
@@ -116,6 +117,7 @@ export const db = {
   deliveries: () => load().deliveries,
   indents: () => load().indents,
   consignments: () => load().consignments,
+  emergencies: () => load().emergencies,
   scanExceptions: () => load().scanExceptions,
   otps: () => load().otps,
 

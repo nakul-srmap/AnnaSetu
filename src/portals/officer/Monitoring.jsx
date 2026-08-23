@@ -7,6 +7,7 @@ import Bar from '../../components/ui/Bar'
 import Note from '../../components/ui/Note'
 import Button from '../../components/ui/Button'
 import Pill from '../../components/ui/Pill'
+import Field, { TextInput } from '../../components/ui/Field'
 import { useState } from 'react'
 
 // A shop asking for stock is a supply decision, so it sits with the supply
@@ -106,6 +107,69 @@ function IndentQueue() {
         A sanctioned indent is what the shop sees against its own stock line, so the dealer learns
         the answer where they asked the question.
       </Note>
+    </Panel>
+  )
+}
+
+// Declaring, and lifting, a public health restriction across the district.
+function EmergencyControl() {
+  const { officer, declareEmergency, liftEmergency, busy } = useSession()
+  const [reason, setReason] = useState('Pandemic — public gathering restricted')
+
+  const data = officer.emergency
+  if (!data) return null
+  const active = data.emergency
+
+  return (
+    <Panel
+      title="District restrictions"
+      eyebrow={active ? `${active.phase} · day ${active.day}` : 'Normal operations'}
+    >
+      {active ? (
+        <>
+          <p className="text-sm">
+            {data.district} has been under a declared restriction since {active.declaredOn}, day{' '}
+            {active.day} of {active.day + active.daysRemaining - 1}.
+          </p>
+          <div className="my-3 flex flex-wrap gap-2">
+            <Pill tone={active.phase === 'lockdown' ? 'warn' : 'info'}>{active.phase}</Pill>
+            <Pill tone="info">{active.slotCapacity} per slot</Pill>
+            <Pill tone={active.deliveryOpenToAll ? 'good' : 'info'}>
+              {active.deliveryOpenToAll ? 'delivery open to all' : 'delivery by assistance only'}
+            </Pill>
+          </div>
+          {data.guidance && (
+            <div className="border-t border-ink-rule pt-3">
+              <p className="text-sm font-semibold">{data.guidance.headline}</p>
+              <ul className="mt-2 list-disc space-y-1 pl-4 text-xs text-ink-soft">
+                {data.guidance.points.map((p) => <li key={p}>{p}</li>)}
+              </ul>
+              <Note>Every household in the district sees this on their own screen.</Note>
+            </div>
+          )}
+          <Button size="sm" variant="quiet" disabled={busy} onClick={() => liftEmergency(data.district)}>
+            Lift the restriction
+          </Button>
+        </>
+      ) : (
+        <>
+          <p className="text-sm text-ink-soft">
+            Declaring a restriction opens home delivery to every household for the first 30 days and
+            cuts slot capacity, then eases automatically. It lifts itself after 90 days.
+          </p>
+          <Field label="Reason">
+            <TextInput value={reason} onChange={(e) => setReason(e.target.value)} />
+          </Field>
+          <Button
+            accent="navy"
+            size="sm"
+            disabled={busy || !reason.trim()}
+            onClick={() => declareEmergency({ reason: reason.trim() })}
+          >
+            Declare a restriction
+          </Button>
+        </>
+      )}
     </Panel>
   )
 }
@@ -218,6 +282,8 @@ export default function Monitoring() {
               </Table>
             </Panel>
           )}
+
+          <EmergencyControl />
 
           <IndentQueue />
         </div>

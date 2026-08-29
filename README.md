@@ -8,7 +8,7 @@ React + Vite + Tailwind frontend, Express + Node API.
 
 ## Deploying
 
-One Render service serves both the API and the portal. See [DEPLOY.md](DEPLOY.md).
+ Render and vercel service serves both the API and the portal. See [DEPLOY.md](DEPLOY.md).
 
 ## Database
 
